@@ -29,7 +29,7 @@ console.log(currencyCodes);
 
 Output
 
-```json
+```json5
 // countryIsos
 [
   ...
