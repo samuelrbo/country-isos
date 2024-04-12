@@ -1,0 +1,31 @@
+{
+  "name": "country-isos",
+  "version": "1.0.0",
+  "description": "NodeJS module to get the country ISOs (Country Codes and Currency Codes) shared from https://iban.com",
+  "homepage": "https://github.com/samuelrbo/country-isos#readme",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "postbuild": "cpy 'src/data/*.json' dist/data",
+    "build": "tsc",
+    "dev": "ts-node index.ts",
+    "script": ".bin/country-isos"
+  },
+  "keywords": ["iso", "iso-3166", "iso-4217"],
+  "author": "Samuel Oliveira<samuelrbo@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "axios": "^1.6.8",
+    "cheerio": "^1.0.0-rc.12",
+    "cpy-cli": "^5.0.0",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.6.2",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=16",
+    "npm": ">=8"
+  }
+}
