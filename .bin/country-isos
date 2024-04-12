@@ -1,0 +1,206 @@
+#!/usr/bin/env node
+
+const fs = require('fs')
+const axios = require('axios');
+const cheerio = require('cheerio');
+const urls = [
+  'https://www.iban.com/country-codes',
+  'https://www.iban.com/currency-codes'
+];
+
+const [,, execType, formatArg] = process.argv;
+
+const formatJson = formatArg && ['--format'].includes(formatArg)
+
+const helpInfo = `
+Countries ISO 3166 and ISO 4217 data crawler
+
+Params:
+
+  [fetch-data|fetch|-f]
+    Download from https://iban.com the currency and country ISOs information
+
+  [update-date|update|-u]
+    Organize in the module structure the data collect from the fetch execution
+
+  [help|-h]
+    Show script help info
+`;
+
+if (['fetch-data', 'fetch', '-f'].includes(execType)) {
+  urls.forEach(url => fetchData(url).then((res) => {
+    const jsonName = url.substring(url.lastIndexOf('/') + 1);
+  
+    const pageHTML = res.data;
+    const $ = cheerio.load(pageHTML);
+  
+    const isCountryCode = jsonName.indexOf('country') !== -1;
+  
+    const tableHTML = isCountryCode
+      ? $('#myTable')
+      : $('table.table.table-bordered.downloads.tablesorter');
+  
+    const table = normalizeNames(tableHTML
+      .text()
+      .split('\n')
+      .map(row => row.replace(/\t/g, '').replace(/\s+/g, ' ').trim())
+      .filter(
+        row => row.length > 0 
+        && 
+        ![
+          'ANTARCTICA', 
+          'PALESTINE, STATE OF', 
+          'SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS', 
+          'No universal currency'
+        ].includes(row)));
+  
+    const splittedTable = chunk(table, 4);
+    const data = [];
+  
+    const header = isCountryCode 
+      ? [ "country", "alpha2", "alpha3", "numeric"] 
+      : [ "country", "currencyName", "code", "number" ];
+    
+    for (let idx = 1; idx < splittedTable.length - 1; idx++) {
+      const rowData = splittedTable[idx];
+      const objData = {};
+  
+      for (let attr = 0; attr < 4; attr++) {
+        objData[header[attr]] = rowData[attr].toUpperCase();
+      }
+  
+      data.push(objData);
+    }
+  
+    fs.writeFileSync(
+      `src/data/${jsonName}.json`, 
+      formatJson
+        ? JSON.stringify(data, null, 2)
+        : JSON.stringify(data)
+    );
+
+    console.log('Done')
+  }));
+
+} else if (['update-data', 'update', '-u'].includes(execType)) {
+  if (!fs.existsSync('src/data/country-codes.json') 
+    || !fs.existsSync('src/data/currency-codes.json')) return;
+
+  console.log('Merging ISOs data...');
+
+  const countryCodes = JSON.parse(fs.readFileSync('src/data/country-codes.json'));
+  const currencyCodes = JSON.parse(fs.readFileSync('src/data/currency-codes.json'));
+
+  const countries = countryCodes.map(c => {
+    const countryCurrency = currencyCodes.find(cc => cc.country === c.country);
+
+    const data = {
+      country: c.country,
+      code: {
+        country: c.country,
+        numeric: c.numeric,
+        alpha2: c['alpha2'],
+        alpha3: c['alpha3'],
+      },
+      currency: {}
+    }
+
+    if (countryCurrency) {
+      data.currency = {
+        country: c.country,
+        currencyName: countryCurrency.currencyName,
+        code: countryCurrency.code,
+        number: countryCurrency.number,
+      }
+    }
+
+    return data;
+  });
+
+  fs.writeFileSync(
+    `src/data/country-isos.json`, 
+    formatJson 
+      ? JSON.stringify(countries, null, 2) 
+      : JSON.stringify(countries)
+  );
+
+  console.log('Done')
+} else {
+  console.log(helpInfo);
+}
+
+function chunk(arr, chunkSize) {
+  const result = arr.reduce((resultArray, item, index) => {
+    const chunkIndex = Math.floor(index/chunkSize);
+
+    if (!resultArray[chunkIndex]) {
+      resultArray[chunkIndex] = [] // start a new chunk
+    }
+
+    resultArray[chunkIndex].push(item);
+
+    return resultArray;
+  }, []);
+
+  return result;
+}
+
+async function fetchData(url) {
+  console.log(`Crawling data from ${url}...`);
+
+  let response = await axios(url).catch((err) => console.log(err));
+
+  if (response.status !== 200) {
+    console.log('Error occurred whie fetching data');
+    return;
+  }
+
+  return response;
+}
+
+function normalizeNames(strArray) {
+  const toReplace = [
+    {
+      from: ['CZECHIA', 'CZECH REPUBLIC'],
+      to: 'CZECH REPUBLIC'
+    },
+    {
+      from: ['SWAZILAND', 'KINGDOM OF ESWATINI'],
+      to: 'ESWATINI'
+    },
+    {
+      from: [
+        "KOREA (THE DEMOCRATIC PEOPLE'S REPUBLIC OF)", 
+        "THE DEMOCRATIC PEOPLE'S REPUBLIC OF KOREA",
+        "KOREA (THE DEMOCRATIC PEOPLE’S REPUBLIC OF)",
+        "THE DEMOCRATIC PEOPLE’S REPUBLIC OF KOREA",
+      ],
+      to: 'NORTH KOREA'
+    },
+    {
+      from: ["KOREA (THE REPUBLIC OF)", "THE REPUBLIC OF KOREA"],
+      to: 'SOUTH KOREA'
+    },
+    {
+      from: [
+        "LAO PEOPLE'S DEMOCRATIC REPUBLIC",
+        "LAO PEOPLE’S DEMOCRATIC REPUBLIC"
+      ],
+      to: 'LAOS'
+    },
+  ];
+
+  return strArray.map(str => {
+    let newStr = str.toUpperCase();
+
+    newStr = newStr.replace('(THE)', '').trim();
+
+    const replace = toReplace.find(tr => tr.from.includes(newStr));
+    if (replace) {
+      newStr = replace.to;
+    }
+
+    return newStr;
+  })
+}
+
