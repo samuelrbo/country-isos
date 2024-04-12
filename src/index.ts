@@ -1,16 +1,11 @@
-import * as fs from 'fs';
 import { ICountryIso } from './interfaces/country-iso.interface';
 import { IIsoCode } from './interfaces/iso-code.interface';
 import { IIsoCurrency } from './interfaces/iso-currency.interface';
 
-export const countryIsos: ICountryIso[] = JSON.parse(
-  fs.readFileSync('./data/country-isos.json').toString()
-);
+import jsonCountryIsos from './data/country-isos.json';
+import jsonCountryCodes from './data/country-codes.json';
+import jsonCurrencyCodes from './data/currency-codes.json';
 
-export const countryCodes: IIsoCode[] = JSON.parse(
-  fs.readFileSync('./data/country-codes.json').toString()
-);
-
-export const currencyCodes: IIsoCurrency[] = JSON.parse(
-  fs.readFileSync('./data/currency-codes.json').toString()
-);
+export const countryIsos: ICountryIso[] = jsonCountryIsos
+export const countryCodes: IIsoCode[] = jsonCountryCodes;
+export const currencyCodes: IIsoCurrency[] = jsonCurrencyCodes;
