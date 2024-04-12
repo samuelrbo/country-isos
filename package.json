@@ -9,7 +9,7 @@
     "prepublish": "npm run build",
     "postbuild": "cpy 'src/data/*.json' dist/data",
     "build": "tsc",
-    "dev": "ts-node index.ts",
+    "dev": "ts-node src/index.ts",
     "script": ".bin/country-isos"
   },
   "keywords": ["iso", "iso-3166", "iso-4217"],
