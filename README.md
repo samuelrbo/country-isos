@@ -1,6 +1,6 @@
 <!-- https://simpleicons.org/ -->
 
-<img src="https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge">&nbsp;
+<img src="https://img.shields.io/badge/version-1.0.1-blue?style=for-the-badge">&nbsp;
 <img src="https://img.shields.io/badge/nodejs->=18.20.1-3A6F02?style=for-the-badge&logo=nodedotjs">
 <img src="https://img.shields.io/badge/npm->=10.5.0-cc0000?style=for-the-badge&logo=npm">
 

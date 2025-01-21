@@ -1,6 +1,6 @@
 {
   "name": "country-isos",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NodeJS module to get the country ISOs (Country Codes and Currency Codes) shared from https://iban.com",
   "homepage": "https://github.com/samuelrbo/country-isos#readme",
   "main": "dist/index.js",
