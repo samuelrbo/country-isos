@@ -30,50 +30,50 @@ Params:
 if (['fetch-data', 'fetch', '-f'].includes(execType)) {
   urls.forEach(url => fetchData(url).then((res) => {
     const jsonName = url.substring(url.lastIndexOf('/') + 1);
-  
+
     const pageHTML = res.data;
     const $ = cheerio.load(pageHTML);
-  
+
     const isCountryCode = jsonName.indexOf('country') !== -1;
-  
+
     const tableHTML = isCountryCode
       ? $('#myTable')
       : $('table.table.table-bordered.downloads.tablesorter');
-  
+
     const table = normalizeNames(tableHTML
       .text()
       .split('\n')
       .map(row => row.replace(/\t/g, '').replace(/\s+/g, ' ').trim())
       .filter(
-        row => row.length > 0 
-        && 
+        row => row.length > 0
+        &&
         ![
-          'ANTARCTICA', 
-          'PALESTINE, STATE OF', 
-          'SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS', 
+          'ANTARCTICA',
+          'PALESTINE, STATE OF',
+          'SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS',
           'No universal currency'
         ].includes(row)));
-  
+
     const splittedTable = chunk(table, 4);
     const data = [];
-  
-    const header = isCountryCode 
-      ? [ "country", "alpha2", "alpha3", "numeric"] 
+
+    const header = isCountryCode
+      ? [ "country", "alpha2", "alpha3", "numeric"]
       : [ "country", "currencyName", "code", "number" ];
-    
+
     for (let idx = 1; idx < splittedTable.length - 1; idx++) {
       const rowData = splittedTable[idx];
       const objData = {};
-  
+
       for (let attr = 0; attr < 4; attr++) {
         objData[header[attr]] = rowData[attr].toUpperCase();
       }
-  
+
       data.push(objData);
     }
-  
+
     fs.writeFileSync(
-      `src/data/${jsonName}.json`, 
+      `src/data/${jsonName}.json`,
       formatJson
         ? JSON.stringify(data, null, 2)
         : JSON.stringify(data)
@@ -83,7 +83,7 @@ if (['fetch-data', 'fetch', '-f'].includes(execType)) {
   }));
 
 } else if (['update-data', 'update', '-u'].includes(execType)) {
-  if (!fs.existsSync('src/data/country-codes.json') 
+  if (!fs.existsSync('src/data/country-codes.json')
     || !fs.existsSync('src/data/currency-codes.json')) return;
 
   console.log('Merging ISOs data...');
@@ -118,9 +118,9 @@ if (['fetch-data', 'fetch', '-f'].includes(execType)) {
   });
 
   fs.writeFileSync(
-    `src/data/country-isos.json`, 
-    formatJson 
-      ? JSON.stringify(countries, null, 2) 
+    `src/data/country-isos.json`,
+    formatJson
+      ? JSON.stringify(countries, null, 2)
       : JSON.stringify(countries)
   );
 
@@ -170,7 +170,7 @@ function normalizeNames(strArray) {
     },
     {
       from: [
-        "KOREA (THE DEMOCRATIC PEOPLE'S REPUBLIC OF)", 
+        "KOREA (THE DEMOCRATIC PEOPLE'S REPUBLIC OF)",
         "THE DEMOCRATIC PEOPLE'S REPUBLIC OF KOREA",
         "KOREA (THE DEMOCRATIC PEOPLE’S REPUBLIC OF)",
         "THE DEMOCRATIC PEOPLE’S REPUBLIC OF KOREA",
